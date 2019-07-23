@@ -48,7 +48,7 @@
     Just call the app with the configuration file(s) pathnames as command line parameters:
 
     ```
-    IChangeTrackingCodeGen "c:\temp\myapp.cfg" "c:\projects\otherappconfig.txt"
+    cs_wpf_property_generator "c:\temp\myapp.cfg" "c:\projects\otherappconfig.txt"
     ```
 
 3.  Output
