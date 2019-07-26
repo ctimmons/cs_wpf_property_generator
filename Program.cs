@@ -38,7 +38,7 @@ namespace {project.Namespace}
   }}
 }}";
 
-        File.WriteAllText(project.OutputFilename, output);
+        project.Save(output);
       }
     }
 
@@ -161,6 +161,12 @@ public {property.Type} {property.Name}
     private Project()
       : base()
     {
+    }
+
+    public void Save(String output)
+    {
+      Directory.CreateDirectory(Path.GetDirectoryName(this.OutputFilename));
+      File.WriteAllText(this.OutputFilename, output);
     }
 
     /* Remove comments and trim whitespace from line. */
