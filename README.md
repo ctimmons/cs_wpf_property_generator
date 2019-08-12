@@ -8,11 +8,15 @@
 
     Given one or more configuration files (described below), this utility outputs one `.cs` file per configuration file.  Each generated `.cs` file contains a serializable partial class, with property setters that contain code for the specified interfaces.  `IEnumerable`-derived properties are handled, as well as `IEnumerable`-derived properties that contain instances of `IChangeTracking`-derived objects.
 
-1.  Configuration File
+1.  Building
+
+    This application is a vanilla C# project.  There are no dependencies required to build it.
+
+2.  Configuration File
 
     Instead of XML or JSON, the configuration file is a rudimentary, bare-bones text file.  The configuration file's extension doesn't matter.
 
-    The file has five sections: namespace, classname, interfaces, properties, and outputfilename.  The sections are separated by one or more blank lines, and all section names are case-insensitive.  For example:
+    The configuration file has five sections: namespace, classname, interfaces, properties, and outputfilename.  The sections are separated by one or more blank lines, and all section names are case-insensitive.  For example:
 
     ```
     # The order of the sections doesn't matter.
@@ -31,7 +35,7 @@
     String Name
     Int32 Version
     MyCustomType CustomType
-    x List<String> Names
+    x List<String> Names # The 'x' means the property implements IEnumberable<T>.
 
     outputfilename # Required, case-insensitive.
     c:\temp\properties.cs
@@ -43,7 +47,7 @@
 
     The `#` sign starts a comment.  The `#` sign, and any text after it up to the end of the line, is ignored.
 
-2.  Usage
+3.  Usage
 
     Just call the app with the configuration file(s) pathnames as command line parameters:
 
@@ -51,7 +55,7 @@
     cs_wpf_property_generator "c:\temp\myapp.cfg" "c:\projects\otherappconfig.txt"
     ```
 
-3.  Output
+4.  Output
 
     The above configuration file generates this C# code, and saves it to the file specified in the config file's `outputfilename` section.  `outputfilename` is overwritten if it already exists:
 
