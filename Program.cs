@@ -107,39 +107,50 @@ protected void OnPropertyChanged(string name)
       return result.Join("\n\n");
     }
 
-    private static String GetPropertySetter(Project project, Property property)
+    private static String GetIEnumerableGetter(Property property)
     {
-      var result = new List<String>() { $"this.{property.BackingStoreName} = value;" };
+      return $@"get
+{{
+  if (this.{property.BackingStoreName} == null)
+    this.{property.BackingStoreName} = new {property.Type}();
+
+  return this.{property.BackingStoreName};
+}}";
+    }
+
+    private static String GetStandardGetterAndSetter(Project project, Property property)
+    {
+      var result = new List<String>() { $@"get
+{{
+  return this.{property.BackingStoreName};
+}}
+set
+{{
+  this.{property.BackingStoreName} = value;
+" };
 
       if (project.ShouldImplementIChangeTracking)
         result.Add($@"if (!this._originalValues.ContainsKey(nameof(this.{property.Name})))
   this._originalValues[nameof(this.{property.Name})] = this.{property.BackingStoreName};
 
-this.IsChanged = (value != ({property.Type}) this._originalValues[nameof(this.{property.Name})]);");
+this.IsChanged = (value != ({property.Type}) this._originalValues[nameof(this.{property.Name})]);
+".Indent(2));
 
       if (project.ShouldImplementINotifyPropertyChanged)
-        result.Add($"OnPropertyChanged(nameof(this.{property.Name}));");
+        result.Add($"  OnPropertyChanged(nameof(this.{property.Name}));");
 
-      return result.Join("\n\n");
+      result.Add("}");
+
+      return result.Join("\n");
     }
 
     private static String GetProperty(Project project, Property property)
     {
-      if (property.IsIEnumerable)
-        return $"public {property.Type} {property.Name} {{ get; }} = new {property.Type}();";
-      else
-        return
+      return
 $@"private {property.Type} {property.BackingStoreName};
 public {property.Type} {property.Name}
 {{
-  get
-  {{
-    return this.{property.BackingStoreName};
-  }}
-  set
-  {{
-{GetPropertySetter(project, property).Indent(4)}
-  }}
+{(property.IsIEnumerable ? GetIEnumerableGetter(property) : GetStandardGetterAndSetter(project, property)).Indent(2)}
 }}";
     }
 
