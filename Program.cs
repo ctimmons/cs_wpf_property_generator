@@ -22,10 +22,7 @@ namespace cs_wpf_property_generator
 
         var project = Project.GetProject(arg);
 
-        var output = $@"using System;
-using System.ComponentModel;
-using System.Collections.Generic;
-using System.Linq;
+        var output = $@"{GetUsings(project)}
 
 namespace {project.Namespace}
 {{
@@ -40,6 +37,17 @@ namespace {project.Namespace}
 
         project.Save(output);
       }
+    }
+
+    private static String GetUsings(Project project)
+    {
+      return
+        project
+        .Usings
+        .OrderBy(u => u)
+        .Distinct()
+        .Select(u => $"using {u};")
+        .Join("\n");
     }
 
     private static String GetInterfaceIdentifiers(Project project)
@@ -64,7 +72,7 @@ namespace {project.Namespace}
       result.AddRange(
         properties
         .Where(p => p.IsIEnumerable)
-        .Select(p => $"this.{p.Name}.Where(p => p is IChangeTracking).Any(p => p.IsChanged)"));
+        .Select(p => $"this.{p.Name}.Where(p => p is IChangeTracking).Any(p => (Boolean) p.GetType().GetProperty(\"IsChanged\").GetValue(p))"));
 
       return result.Join(" ||\n");
     }
@@ -74,7 +82,7 @@ namespace {project.Namespace}
       var result = new List<String>();
 
       if (project.ShouldImplementIChangeTracking)
-        result.Add($@"private Dictionary<String, Object> _originalValues = new Dictionary<String, Object>();
+        result.Add($@"private readonly Dictionary<String, Object> _originalValues = new Dictionary<String, Object>();
 
 #region IChangeTracking
 private Boolean _isChanged = false;
@@ -107,50 +115,39 @@ protected void OnPropertyChanged(string name)
       return result.Join("\n\n");
     }
 
-    private static String GetIEnumerableGetter(Property property)
+    private static String GetPropertySetter(Project project, Property property)
     {
-      return $@"get
-{{
-  if (this.{property.BackingStoreName} == null)
-    this.{property.BackingStoreName} = new {property.Type}();
-
-  return this.{property.BackingStoreName};
-}}";
-    }
-
-    private static String GetStandardGetterAndSetter(Project project, Property property)
-    {
-      var result = new List<String>() { $@"get
-{{
-  return this.{property.BackingStoreName};
-}}
-set
-{{
-  this.{property.BackingStoreName} = value;
-" };
+      var result = new List<String>() { $"this.{property.BackingStoreName} = value;" };
 
       if (project.ShouldImplementIChangeTracking)
         result.Add($@"if (!this._originalValues.ContainsKey(nameof(this.{property.Name})))
   this._originalValues[nameof(this.{property.Name})] = this.{property.BackingStoreName};
 
-this.IsChanged = (value != ({property.Type}) this._originalValues[nameof(this.{property.Name})]);
-".Indent(2));
+this.IsChanged = (value != ({property.Type}) this._originalValues[nameof(this.{property.Name})]);");
 
       if (project.ShouldImplementINotifyPropertyChanged)
-        result.Add($"  OnPropertyChanged(nameof(this.{property.Name}));");
+        result.Add($"OnPropertyChanged(nameof(this.{property.Name}));");
 
-      result.Add("}");
-
-      return result.Join("\n");
+      return result.Join("\n\n");
     }
 
     private static String GetProperty(Project project, Property property)
     {
-      return
+      if (property.IsIEnumerable)
+        return $"public {property.Type} {property.Name} {{ get; }} = new {property.Type}();";
+      else
+        return
 $@"private {property.Type} {property.BackingStoreName};
 public {property.Type} {property.Name}
 {{
-{(property.IsIEnumerable ? GetIEnumerableGetter(property) : GetStandardGetterAndSetter(project, property)).Indent(2)}
+  get
+  {{
+    return this.{property.BackingStoreName};
+  }}
+  set
+  {{
+{GetPropertySetter(project, property).Indent(4)}
+  }}
 }}";
     }
 
@@ -168,6 +165,7 @@ public {property.Type} {property.Name}
     public Boolean ShouldImplementINotifyPropertyChanged { get; private set; } = false;
     public List<Property> Properties { get; } = new List<Property>();
     public String OutputFilename { get; private set; }
+    public List<String> Usings { get; } = new List<String>() { "System", "System.ComponentModel", "System.Collections.Generic", "System.Linq" };
 
     private Project()
       : base()
@@ -191,7 +189,7 @@ public {property.Type} {property.Name}
         : line.Substring(0, indexOfHash)).Trim();
     }
 
-    private enum State { Start, Namespace, Classname, Interfaces, Properties, OutputFilename }
+    private enum State { Start, Namespace, Classname, Interfaces, Properties, OutputFilename, Usings }
 
     public static Project GetProject(String filename)
     {
@@ -238,6 +236,9 @@ public {property.Type} {property.Name}
               break;
             case State.OutputFilename:
               result.OutputFilename = Path.GetFullPath(line.Replace("\"", ""));
+              break;
+            case State.Usings:
+              result.Usings.Add(line);
               break;
           }
         }

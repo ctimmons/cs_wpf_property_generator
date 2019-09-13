@@ -16,7 +16,7 @@
 
     Instead of XML or JSON, the configuration file is a rudimentary, bare-bones text file.  The configuration file's extension doesn't matter.
 
-    The configuration file has five sections: namespace, classname, interfaces, properties, and outputfilename.  The sections are separated by one or more blank lines, and all section names are case-insensitive.  For example:
+    The configuration file has six sections: namespace, classname, interfaces, properties, outputfilename, and usings.  The sections are separated by one or more blank lines, and all section names are case-insensitive.  For example:
 
     ```
     # The order of the sections doesn't matter.
@@ -39,11 +39,16 @@
 
     outputfilename # Required, case-insensitive.
     c:\temp\properties.cs
+
+    usings
+    System.Xml
     ```
 
     Most of the sections should be self-explanatory.  The `interfaces` section can contain either `IChangeTracking` or `INotifyPropertyChanged`, or both (case-insensitive).  This controls the code generated for each property setter.  You can leave the `interfaces` section empty, or remove it altogether, to just generate normal properties.
 
     The `properties` section contains one or more lines, each describing a property's type and name.  Optionally, an "x" (case-insensitive) may be placed at the beginning of a property line to indicate the property implements IEnumerable.  That affects a property setter's code generation for the `IChangeTracking` interface.
+
+    The generated code's `usings` statement includes `System`, `System.ComponentModel`, `System.Collections.Generic`, and `System.Linq`.  If your code needs other namespaces, list those namespaces in the `usings` section of the configuration file (see example above).  The utility filters out duplicate namespaces, so they won't cause an error.
 
     The `#` sign starts a comment.  The `#` sign, and any text after it up to the end of the line, is ignored.
 
@@ -64,6 +69,7 @@
     using System.ComponentModel;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Xml;
 
     namespace MyApp.Library
     {
@@ -142,7 +148,7 @@
           {
             return
               this._isChanged ||
-              this.Names.Where(p => p is IChangeTracking).Any(p => p.IsChanged);
+              this.Names.Where(p => p is IChangeTracking).Any(p => (Boolean) p.GetType().GetProperty("IsChanged").GetValue(p));
           }
           set
           {
