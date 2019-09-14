@@ -72,7 +72,7 @@ namespace {project.Namespace}
       result.AddRange(
         properties
         .Where(p => p.IsIEnumerable)
-        .Select(p => $"this.{p.Name}.Where(p => p is IChangeTracking).Any(p => (Boolean) p.GetType().GetProperty(\"IsChanged\").GetValue(p))"));
+        .Select(p => $"this.{p.Name}.Where(p => p is IChangeTracking).Any(p => (p as IChangeTracking).IsChanged)"));
 
       return result.Join(" ||\n");
     }
