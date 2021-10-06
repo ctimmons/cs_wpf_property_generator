@@ -25,7 +25,7 @@ namespace cs_wpf_property_generator
 
         if (project.Errors.Any())
         {
-          /* Don't generate code when error are present.
+          /* Don't generate code when errors are present.
              just output the header comment (which contains
              the error messages), and process the next 
              configuration file. */
@@ -424,7 +424,7 @@ Note that another parameterless constructor cannot be created in a partial class
       }
 
       var firstLetterOfName = Char.ToLower(this.Name[0]);
-      var restOfName = this.Name.Substring(1);
+      var restOfName = this.Name[1..];
       this.BackingStoreName = $"_{firstLetterOfName}{restOfName}";
     }
   }

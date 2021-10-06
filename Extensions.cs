@@ -25,7 +25,7 @@ namespace cs_wpf_property_generator
       return (count < 1) ? "" : (new StringBuilder(value.Length * count)).Insert(0, value, count).ToString();
     }
 
-    private static readonly Regex _indentTextRegex = new Regex("(\r\n|\n)");
+    private static readonly Regex _indentTextRegex = new("(\r\n|\n)");
 
     /// <summary>
     /// Treat 'value' as a multiline string, where each string is separated either by

@@ -62,7 +62,7 @@
      cs_wpf_property_generator "c:\temp\myapp.cfg" "c:\projects\otherappconfig.txt"
      ```
 
-    To process the example configuration, open this project's properties and go to the `Debug` page.  Put `..\..\Examples\properties.cfg` in the `Command line arguments` textbox and run the program.  The generated code will be written to the location specified by the `[outputfilename]` section, which in this case is the `%temp%` folder.  It's usually something like `C:\Users\<username>\AppData\Local\Temp\properties.cs`.
+    To process the example configuration, open this project's properties and go to the `Debug` page.  Put `..\..\..\Examples\properties.cfg` in the `Command line arguments` textbox and run the program.  The generated code will be written to the location specified by the `[outputfilename]` section, which in this case is the `%temp%` folder.  It's usually something like `C:\Users\<username>\AppData\Local\Temp\properties.cs`.
 
     The generated code is an ordinary C# class.  You can create an instance by calling the class's parameterless constructor.  You can also create partial classes to add functionality to the generated code.
 
